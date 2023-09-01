@@ -9,10 +9,21 @@ Aes_manager::~Aes_manager()
 {
 }
 
+void Aes_manager::EnumerateServiceNames()
+{
+	RetCode_t nRetCode = acsEnumServerNames(ST_CSTA, DisplayServerNames, 0);
+
+	if ( nRetCode != ACSPOSITIVE_ACK )
+	{
+		std::cout << "[ERROR] Error Code: "<< nRetCode;
+	}
+}
+
 bool Aes_manager::OpenACSStream()
 {
-   ReadServerConfig();
+	ReadServerConfig();
 
+	EnumerateServiceNames();
     return true;
 }
 

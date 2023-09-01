@@ -6,9 +6,9 @@ class ConfigParser;
 class  ConfigParser : public Singleton<ConfigParser>
 {
    public:
-         ConfigParser(){ std::cout << "constructed" << std::endl; }
+         ConfigParser(){ std::cout << "ConfigParser constructed" << std::endl; }
         
-         ~ConfigParser(){  std::cout << "destructed" << std::endl;}
+         ~ConfigParser(){ std::cout << "ConfigParser destructed" << std::endl;}
    
    public:
       // static shared_ptr<ConfigParser> GetInstance() {

@@ -1,17 +1,21 @@
 #ifndef _TSAPI_TEST_AES_MANAGER_H_
 #define _TSAPI_TEST_AES_MANAGER_H_
 
-class Aes_manager
-{
-private:
-    /* data */
-public:
-    Aes_manager();
-    ~Aes_manager();
+class Aes_manager;
 
-    
+class Aes_manager  : public Singleton<Aes_manager>
+{
+  
+public:
+    Aes_manager(){ std::cout << "Aes_manager constructed" << std::endl; }
+        
+    ~Aes_manager(){ std::cout << "Aes_manager destructed" << std::endl;}
+   
+
 private:
     bool ReadServerConfig();
+    void EnumerateServiceNames();
+
 	// Store handle of the ACS stream
 	std::unique_ptr<ACSHandle_t> acs_handle_;
 
@@ -59,8 +63,13 @@ unsigned short sendQSize : 0,
 PrivateData_t *privateData); 
 */
 
-public :
+public : 
     bool OpenACSStream();
+
+    // Handle object used to wait for acsOpenStreamConf Event(Global)
+	sem_t hOpenStreamConfEvent_;	
+	// Handle object used to wait for acsCloseStreamConf Event
+	sem_t hCloseStreamConfEvent_;	
 };
 
 #endif

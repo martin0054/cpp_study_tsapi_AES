@@ -3,45 +3,65 @@
 template <typename T> 
 std::shared_ptr<T> Singleton<T>::instance_;
 
- int main(int argc, char* argv[]) {
+	int main(int argc, char* argv[]) {
 
-
-	std::cout << "Monitor a device start" << std::endl;
-
-	auto configParser = ConfigParser::GetInstance();
-	 
-   	try
-	{
-		std::string fileName = "monitorDN.INI";
-		if(configParser->readMonitoringDn(fileName)){
-			std::cout << "[ERROR] Read Monitoring ini file error" << std::endl; 
-		}
+		ServiceOpen();
 
 		
-	}
-	catch (std::exception& e)
-	{
-		 std::cout << "[ERROR] monitorDN.INI file read error : " << e.what() << std::endl;
-		 exit(0);
+
+		return 0;
 	}
 
-    std::string configDn =configParser->getMonitoringDN();
-		std::cout << "Monitor device list : " << configDn << std::endl;
+	void MonitoringDevice(){
 
-	const char* pRegistDn = NULL;
-	const char* pSplitDelimiters = "|";
-	pRegistDn = strtok((char*)configDn.c_str(), pSplitDelimiters );
+		std::cout << "Monitor a device start" << std::endl;
 
-	if(!pRegistDn || pRegistDn == NULL)
+		auto configParser = ConfigParser::GetInstance();
+		
+		try
 		{
-			 std::cout << "[ERROR] Try again ini file Input Device Monitoring List" << std::endl;
+			std::string fileName = "monitorDN.INI";
+			if(configParser->readMonitoringDn(fileName)){
+				std::cout << "[ERROR] Read Monitoring ini file error" << std::endl; 
+			}
 
-			return 0;
+			
+		}
+		catch (std::exception& e)
+		{
+			std::cout << "[ERROR] monitorDN.INI file read error : " << e.what() << std::endl;
+			exit(0);
 		}
 
-	 std::cout << "Start Monitor a device request " << std::endl;
+		std::string configDn =configParser->getMonitoringDN();
+			std::cout << "Monitor device list : " << configDn << std::endl;
 
-   
+		const char* pRegistDn = NULL;
+		const char* pSplitDelimiters = "|";
+		pRegistDn = strtok((char*)configDn.c_str(), pSplitDelimiters );
 
-      return 0;
+		if(!pRegistDn || pRegistDn == NULL)
+			{
+				std::cout << "[ERROR] Try again ini file Input Device Monitoring List" << std::endl;
+
+				return 0;
+			}
+
+		std::cout << "Start Monitor a device request " << std::endl;
+
+	
+	}
+  
+  int ServiceOpen(){
+	std::cout << "************************************************************" ;
+	std::cout << "             AES Server Connect & ARIBO-CTI START           " ;
+	std::cout << "************************************************************" ;
+	
+	auto aesManager = Aes_manager::GetInstance();
+  
+	float fSleep = 0;
+
+	if(aesManager->OpenACSStream()){
+			if(Sem)
+	}
   }
