@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<log4j:configuration debug="false" xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+  <appender name="logConsoleAppender" class="org.apache.log4j.ConsoleAppender">
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="%d{ISO8601} [%-5p] [%c:%L] %m%n"/>
+    </layout>
+  </appender>
+
+  <appender name="logTimeRollingFileAppender" class="org.apache.log4j.rolling.RollingFileAppender">
+    <rollingPolicy class="org.apache.log4j.rolling.TimeBasedRollingPolicy">
+      <param name="fileNamePattern" value="/ALCOM_CTI/log/alcom_cti_%d{yyyy-MM-dd}.log"/> <!--Dailly-->
+    </rollingPolicy>
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="%d{ISO8601} [%-5p] [%c:%L] %m%n"/>
+    </layout>
+  </appender>
+
+  <appender name="DblogTimeRollingFileAppender" class="org.apache.log4j.DailyRollingFileAppender">
+    <param name="File" value="/ALCOM_CTI/stat/ALCOM_CTI_db.log"/>
+    <!--param name="Append" value="true"/-->
+    <param name="DatePattern" value="'.'yyyy-MM-dd-HH"/>
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="%m%n"/>
+    </layout>
+  </appender>
+
+  <!-- Monitoring 로그 별도 관리 : 2022.08.03.cyh -->
+  <appender name="logMonitorRollingFileAppender" class="org.apache.log4j.rolling.RollingFileAppender">
+    <rollingPolicy class="org.apache.log4j.rolling.TimeBasedRollingPolicy">
+      <param name="fileNamePattern" value="/ALCOM_CTI/log/alcom_cti_monitor_%d{yyyy-MM-dd}.log"/> <!--Dailly-->
+    </rollingPolicy>
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="%d{ISO8601} [%-5p] %m%n"/>
+    </layout>
+  </appender>
+
+  <root>
+    <level value="debug" />
+    <appender-ref ref="logConsoleAppender"/>
+    <appender-ref ref="logTimeRollingFileAppender"/>
+  </root>
+  
+  <logger name="dblog">
+    <level value="debug" />
+    <appender-ref ref="DblogTimeRollingFileAppender"/>
+  </logger>
+
+  <!-- Monitoring 로그 별도 관리 : 2022.08.03.cyh -->
+  <logger name="monitorlog">
+    <level value="debug" />
+    <appender-ref ref="logMonitorRollingFileAppender"/>
+  </logger>
+  
+</log4j:configuration>

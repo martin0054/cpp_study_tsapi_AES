@@ -1,0 +1,87 @@
+
+
+#################################################
+# Redefine (.cpp) Default Compile rules
+#################################################
+.SUFFIXES : .c .cpp
+
+ifeq ($(BIT), 32)
+CC           		 = gcc
+else
+CC           		 = g++
+endif
+DEFLIST		 		 = -DLINUX
+LIB_DIR		 		 = /usr/lib64/
+LIB_BOOST_DIR		 = /usr/lib64/
+EXE_DIR				 = /ALC7M_CTI/
+EXENAME		 		 = ALCOM_CTI
+VERSION	 	 		 = 1.1.7
+LFLAGS		 		 = -lpthread -lcsta -lattpriv -lapr-1 -laprutil-1 -llog4cxx -lboost_system -lboost_thread -lnagcore
+INCLUDE_DIR	 		 = /usr/include/nts/
+INC_LOG_DIR			 = /usr/local/include/log4cxx/
+INC_BOOST_DIR	 	 = /usr/include/boost/
+INC_NAG	 			 = /usr/local/include/nagcore/ 
+IPATHS       		 = -I$(INCLUDE_DIR) -I$(INC_LOG_DIR) -I$(INC_BOOST_DIR) -I$(INC_NAG)
+LPATHS		 		 = -L$(LIB_DIR) -L$(LIB_BOOST_DIR)
+
+
+##################################################
+# Object List
+##################################################
+C_SRCS			= $(wildcard *.c)
+CPP_SRCS		= $(wildcard *.cpp)
+SRCS			= $(C_SRCS)+$(CPP_SRCS)
+OBJS			= $(C_SRCS:.c=.o)
+OBJS			+= $(CPP_SRCS:.cpp=.o)
+
+OBJS_DBG		= $(C_SRCS:.c=.dbg_o)
+OBJS_DBG		+= $(CPP_SRCS:.cpp=.dbg_o)
+
+
+##################################################
+# Build Rules
+##################################################
+.cpp.o :
+	@echo "[ALCOM CTI Compiling] $< ..."
+	@$(CC) $(DEFLIST) -c  $< -o $@ $(IPATHS) $(LPATHS) -std=c++17
+
+.SUFFIXES: .c .cpp .dbg_o
+
+.cpp.dbg_o:
+	@echo "[ALCOM CTI Debug Compiling] $< ..."
+	@$(CC) $(DEFLIST) -c  $< -o $@ $(IPATHS) $(LPATHS) -std=c++17
+
+
+#****************************************************************************
+# ARIBO CTI of the build
+#****************************************************************************
+release : $(OBJS)
+		@echo "Make ALCOM CTI Library..."
+		@$(CC) $(DEFLIST) -o $(EXENAME)_$(VERSION) $(OBJS) $(LFLAGS)
+
+debug   :  $(OBJS_DBG)
+		@echo "Make ALCOM CTI Debug Library..."
+		@$(CC) $(DEFLIST) -g -ggdb -o $(EXE_DIR)$(EXENAME)_$(VERSION)_d $(OBJS_DBG) $(LFLAGS) 
+
+install :
+		@echo "Install ALCOM CTI..."
+		@mkdir -p $(EXE_DIR)
+		@cp -R bin/* $(EXE_DIR)/
+		@cp -R config/* $(EXE_DIR)/
+		@cp $(EXENAME)_$(VERSION) $(EXE_DIR)$(EXENAME)_$(VERSION)
+		@ln -sf $(EXE_DIR)$(EXENAME)_$(VERSION) $(EXE_DIR)$(EXENAME) 
+
+clean :
+		@echo "Delete Object, ALCOM CTI files..."
+		@rm -f $(EXENAME)_$(VERSION)*
+		@rm -f *.o
+		@rm -f *.dbg_o 
+		@rm -f core.*
+
+uninstall :
+		@echo "Uninstall ALCOM CTI..."
+		@rm -Rf $(EXE_DIR)
+
+test :
+		@echo "Linux Bit is" $(BIT)
+		@echo "Compiler is" $(CC)
