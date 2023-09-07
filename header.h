@@ -13,13 +13,24 @@
 #include <fstream>
 #include <stdexcept>
 #include <memory>
+#include <semaphore.h>
+#include <utility>
+#include <vector>
+#include <algorithm>
+#include <mutex>
+#include <thread>
+#include<unordered_map>
+#include <queue>
 
 #include <acs.h>
 #include <csta.h>
+#include <attpriv.h>
 
 
-#include "aes_manager.h"
 #include "singletonTemplate.h"
 #include "configParser.h"
+#include "aesManager.h"
+#include "infoManager.h"
+
 
 #endif

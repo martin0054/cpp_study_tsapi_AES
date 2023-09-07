@@ -1,5 +1,18 @@
 #include "header.h"
 
+ConfigParser::ConfigParser()
+{
+   std::cout << "ConfigParser constructed" << std::endl; 
+}
+
+ConfigParser::~ConfigParser()
+{
+    std::cout << "ConfigParser destructed" << std::endl;
+}
+
+
+
+
 bool ConfigParser::readMonitoringDn(std::string fileName)
 {
     boost::property_tree::ptree pt;
@@ -21,7 +34,8 @@ bool ConfigParser::readMonitoringDn(std::string fileName)
 
      catch(std::exception& e)
     {
-         std::cout << "[ERROR] Read Monitoring ini file error" << std::endl; 
+         std::cout << "[ERROR] exception Read Monitoring ini file error " ;
+         std::cout << e.what();      
      
         return false;
     }

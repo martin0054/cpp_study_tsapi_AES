@@ -1,67 +1,125 @@
 #include "header.h"
 
-template <typename T> 
+template <typename T>
 std::shared_ptr<T> Singleton<T>::instance_;
 
-	int main(int argc, char* argv[]) {
+int ServiceOpen()
+{
+	std::cout << "***********************************************************" << std::endl;
+	std::cout << "             AES Server Connect & ARIBO-CTI START           " << std::endl;
+	std::cout << "************************************************************" << std::endl;
 
-		ServiceOpen();
+	auto aesManager = AesManager::GetInstance();
 
-		
-
-		return 0;
-	}
-
-	void MonitoringDevice(){
-
-		std::cout << "Monitor a device start" << std::endl;
-
-		auto configParser = ConfigParser::GetInstance();
-		
-		try
-		{
-			std::string fileName = "monitorDN.INI";
-			if(configParser->readMonitoringDn(fileName)){
-				std::cout << "[ERROR] Read Monitoring ini file error" << std::endl; 
-			}
-
-			
-		}
-		catch (std::exception& e)
-		{
-			std::cout << "[ERROR] monitorDN.INI file read error : " << e.what() << std::endl;
-			exit(0);
-		}
-
-		std::string configDn =configParser->getMonitoringDN();
-			std::cout << "Monitor device list : " << configDn << std::endl;
-
-		const char* pRegistDn = NULL;
-		const char* pSplitDelimiters = "|";
-		pRegistDn = strtok((char*)configDn.c_str(), pSplitDelimiters );
-
-		if(!pRegistDn || pRegistDn == NULL)
-			{
-				std::cout << "[ERROR] Try again ini file Input Device Monitoring List" << std::endl;
-
-				return 0;
-			}
-
-		std::cout << "Start Monitor a device request " << std::endl;
-
-	
-	}
-  
-  int ServiceOpen(){
-	std::cout << "************************************************************" ;
-	std::cout << "             AES Server Connect & ARIBO-CTI START           " ;
-	std::cout << "************************************************************" ;
-	
-	auto aesManager = Aes_manager::GetInstance();
-  
 	float fSleep = 0;
+	aesManager->StartEvtThread();
 
-	if(aesManager->OpenACSStream()){
-			if(Sem)
+	if (aesManager->OpenACSStream())
+	{
+
+		//	MonitoringDevice();
 	}
-  }
+
+	// aesManager->CloseACSStream();
+
+	return 0;
+}
+
+std::vector<std::string> splitCommand(std::string command)
+{
+
+	std::vector<std::string> v;
+	std::stringstream ss(command);
+	std::string s;
+
+	while (std::getline(ss, s, ' '))
+	{
+		if (!s.empty())
+			v.push_back(s);
+	}
+	return v;
+}
+int main(int argc, char *argv[])
+{
+	try
+	{
+		std::mutex m2;
+		std::lock_guard<std::mutex> gard(m2);
+		ServiceOpen();
+		std::cout << " service Open" << std::endl;
+	}
+	catch (std::exception &e)
+	{
+		std::cout << "[ERROR] main error : " << e.what() << std::endl;
+	}
+
+	std::cout << " while before" << std::endl;
+
+	try
+	{
+		auto aesManager = AesManager::GetInstance();
+		while (true)
+		{
+
+			std::string command = " ";
+			std::cout << " 명령어를 입력하세요 : ex) Event CallingDn CalledDn  ";
+			std::getline(std::cin, command);
+			std::vector<std::string> v = splitCommand(command);
+
+			std::string event = "";
+			std::string callingDn = " ";
+			std::string calledDn = " ";
+
+			if(v.size() == 1 && v[0]== "make"){
+				event = v[0];
+				v.push_back("2612");
+				v.push_back("901049093096");
+				callingDn = v[1];
+				calledDn = v[2];
+
+				std::cout << event << " : "  << callingDn <<" to  " << calledDn << std::endl;
+
+				int rst = aesManager->MakeCall(callingDn,calledDn," " );
+
+				std::cout << event << " result : "  << rst << std::endl;
+			}
+			else if (v.size()==3 && v[0] == "makecall" )
+			{
+				event = v[0];
+				callingDn = v[1];
+				calledDn = v[2];
+
+				std::cout << " Event : " << event << " callingDn : " << callingDn  << " , calledDn : " << calledDn << std::endl;
+				int rst = aesManager->MakeCall(callingDn,calledDn," " );
+
+					std::cout << event << " result : "  << rst << std::endl;
+			}
+			else if (v.size() == 2 && v[0] == "drop" )
+			{
+				event = v[0];
+				callingDn = v[1];
+				
+				auto infoManger = InfoManager::GetInstance();
+				int connId = infoManger->getConnIdByCalledDN(callingDn);
+				std::cout << event << " : "  << callingDn <<" | connId  " << connId << std::endl;
+				int rst = aesManager->ClearCall(callingDn,connId);
+
+					std::cout << event << " result : "  << rst << std::endl;
+					
+
+			}
+			
+// makecall 2612 901049093096
+			else
+			{
+				std::cout << " ex)Event CallingDn CalledDn : " << command << std::endl;
+			}
+		}
+	}
+	catch (std::exception &e)
+	{
+		std::cout << "[ERROR] main whiled error : " << e.what() << std::endl;
+	}
+
+	return 0;
+}

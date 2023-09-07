@@ -43,7 +43,7 @@ OBJS_DBG		+= $(CPP_SRCS:.cpp=.dbg_o)
 ##################################################
 .cpp.o :
 	@echo "[ALCOM CTI Compiling] $< ..."
-	@$(CC) $(DEFLIST) -c  $< -o $@ $(IPATHS) $(LPATHS) -std=c++17
+	@$(CC) $(DEFLIST) -g -c  $< -o $@ $(IPATHS) $(LPATHS) -std=c++17
 
 .SUFFIXES: .c .cpp .dbg_o
 
