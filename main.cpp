@@ -27,9 +27,9 @@ int ServiceOpen()
 
 std::vector<std::string> splitCommand(std::string command)
 {
-
+	std::string strCommmand = command;
 	std::vector<std::string> v;
-	std::stringstream ss(command);
+	std::stringstream ss(strCommmand);
 	std::string s;
 
 	while (std::getline(ss, s, ' '))
@@ -66,52 +66,45 @@ int main(int argc, char *argv[])
 			std::getline(std::cin, command);
 			std::vector<std::string> v = splitCommand(command);
 
-			std::string event = "";
-			std::string callingDn = " ";
-			std::string calledDn = " ";
+			// std::string event = "";
+			// std::string callingDn = " ";
+			// std::string calledDn = " ";
 
-			if(v.size() == 1 && v[0]== "make"){
-				event = v[0];
-				v.push_back("2612");
-				v.push_back("901049093096");
-				callingDn = v[1];
-				calledDn = v[2];
-
-				std::cout << event << " : "  << callingDn <<" to  " << calledDn << std::endl;
-
-				int rst = aesManager->MakeCall(callingDn,calledDn," " );
-
-				std::cout << event << " result : "  << rst << std::endl;
-			}
-			else if (v.size()==3 && v[0] == "makecall" )
+			
+			if (v.size() == 3 && v[0] == "makecall")
 			{
-				event = v[0];
-				callingDn = v[1];
-				calledDn = v[2];
+				// makecall 2612 901049093096
+				std::string event = v[0];
+				std::string callingDn = v[1];
+				std::string calledDn = v[2];
 
-				std::cout << " Event : " << event << " callingDn : " << callingDn  << " , calledDn : " << calledDn << std::endl;
-				int rst = aesManager->MakeCall(callingDn,calledDn," " );
+				std::cout << " Event : " << event << " callingDn : " << callingDn << " , calledDn : " << calledDn << std::endl;
+				int rst = aesManager->MakeCall(callingDn, calledDn, " ");
 
-					std::cout << event << " result : "  << rst << std::endl;
+				std::cout << event << " result : " << rst << std::endl;
 			}
-			else if (v.size() == 2 && v[0] == "drop" )
+			else if (v.size() == 2 && v[0] == "drop")
 			{
-				event = v[0];
-				callingDn = v[1];
-				
+				std::string event = v[0];
+				std::string callingDn = v[1];
+
 				auto infoManger = InfoManager::GetInstance();
 				int connId = infoManger->getConnIdByCalledDN(callingDn);
-				std::cout << event << " : "  << callingDn <<" | connId  " << connId << std::endl;
-				int rst = aesManager->ClearCall(callingDn,connId);
+				std::cout << event << " : " << callingDn << " | connId  " << connId << std::endl;
+				int rst = aesManager->ClearCall(callingDn, connId);
 
-					std::cout << event << " result : "  << rst << std::endl;
-					
-
+				std::cout << event << " result : " << rst << std::endl;
 			}
-			
-// makecall 2612 901049093096
-			else
-			{
+			// int TransferCall(std::strig callingDn, int oldCallID, int newCallId)
+
+		
+			else if  (v.size() == 3 && v[0] == "transe")
+			{	
+				std::string event = v[0];
+				std::string callingDn = v[1];
+				std::string calledDn = v[2];
+
+				
 				std::cout << " ex)Event CallingDn CalledDn : " << command << std::endl;
 			}
 		}

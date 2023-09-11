@@ -111,6 +111,27 @@ void AesManager::RecvThread()
 						std::cout << " nOpenStreamInvokeID_ : " << nOpenStreamInvokeID_ << " invokeID : " << cstaEvent->event.acsConfirmation.invokeID << std::endl;
 
 						std::cout << "  ACSPOSITIVE_ACK/ACSCONFIRMATION/ ACS_OPEN_STREAM_CONF : " << cstaEvent->eventHeader.eventType << std::endl;
+						
+						if(privateData.length <= 0 ){
+							std::cout <<  " privateData.length <=0 : " << privateData.length << std::endl;
+						}else{
+							std::cout <<  " privateData.length >0 : " << privateData.length << std::endl;
+						}
+			
+						if ( strcmp(privateData.vendor,ECS_VENDOR_STRING) != 0 )
+						{
+							std::cout <<  " 2nd handle error condition , privateData.vendor : " << privateData.vendor  << std::endl;
+						}	
+
+						if ( privateData.data[0] != PRIVATE_DATA_ENCODING )
+						{
+							std::cout <<  " 3rd handle error condition , privateData.data[0]: " <<privateData.data[0]  << std::endl;
+						}
+						else
+						{
+							std::cout <<  " PrivateData = VENDOR: "<< privateData.vendor << " ,data[0] : " << privateData.data[0]  << std::endl;
+
+						}
 						StartMoniringDevice();
 						break;
 					}
@@ -149,6 +170,7 @@ void AesManager::RecvThread()
 
 							infoManger->getDeviceDnByInvokeId(invokeID);
 
+							CallReponseCallback(cstaEvent);
 							break;
 						}
 						case CSTA_UNIVERSAL_FAILURE_CONF:
@@ -227,6 +249,7 @@ void AesManager::RecvThread()
 								PrintgLog(cstaEvent);
 								break;
 						}
+
 						default:
 						{
 							std::cout << "DEBUG  : [Error]  Event Type2: " << cstaEvent->eventHeader.eventType << std::endl;
@@ -238,7 +261,24 @@ void AesManager::RecvThread()
 			}
 		}
 	}
+
 }
+
+int AesManager::StartEvtThread()
+{
+	std::cout << "StartEvtThread()" << std::endl;
+	// std::thread thread(RecvEventThread);
+	// thread.join();
+	// return 0;
+	int nResult = -1;
+	
+	nResult = pthread_create(&p_thread, NULL, RecvEventThread, this);
+	if (nResult != 0)
+		return -1;
+
+	return nResult;
+}
+
 void AesManager::PrintgLog(CSTAEvent_t *cstaEvent)
 {
 	auto &event = cstaEvent->event.cstaUnsolicited.u.serviceInitiated;
@@ -254,17 +294,7 @@ void AesManager::PrintgLog(CSTAEvent_t *cstaEvent)
 
 	
 }
-int AesManager::StartEvtThread()
-{
-	std::cout << "StartEvtThread()" << std::endl;
-	int nResult = -1;
 
-	nResult = pthread_create(&p_thread, NULL, RecvEventThread, this);
-	if (nResult != 0)
-		return -1;
-
-	return nResult;
-}
 
 Boolean DisplayServerNames(char *szServiceName, unsigned long lParam)
 {
@@ -347,6 +377,26 @@ bool AesManager::OpenACSStream()
 	strcpy(privateData.vendor, "VERSION");
 	privateData.data[0] = PRIVATE_DATA_ENCODING;
 	std::string strPrivatData = configParser->getPrivateData();
+	
+
+	if((attMakeVersionString(strPrivatData.c_str(), &(privateData.data[1]))) > 0 )
+	{
+		privateData.length = (unsigned short) strlen(&privateData.data[1]) + 2; 
+	}else{
+		std::string strDefualeData = "3-8";
+		if ( (attMakeVersionString(strDefualeData.c_str(), &(privateData.data[1]))) > 0 )
+			{
+				privateData.length =(unsigned short)strlen(&privateData.data[1]) + 2; 
+			}
+			else
+			{
+				exit(-1);
+			}
+	}
+
+	std::cout << "privateData data version : " << strPrivatData << std::endl;	
+	std::cout << "privateData.length : " << privateData.length << std::endl;	
+	std::cout << "privateData.data[0] : " << privateData.data[0] << std::endl;	
 
 	// Open an ACS stream
 	nRetCode = acsOpenStream(
@@ -366,10 +416,11 @@ bool AesManager::OpenACSStream()
 		sendExtraBufs, // send extra buf size
 		recvQSize,	   // receive queue size using default 0
 		recvExtraBufs, // receive extra bufs
-		NULL
-		//	(PrivateData_t *)&privateData // buffer for Private Data
+		//NULL
+			(PrivateData_t *)&privateData // buffer for Private Data
 	);
 
+	
 	if (nRetCode > 0)
 	{
 		nOpenStreamInvokeID_ = (int)nRetCode;
@@ -620,4 +671,55 @@ int AesManager::ClearCall(std::string callingDn, int callId)
 	nRetCode = cstaClearCall(acs_handle_, invokeID, &connId, (PrivateData_t *)&privData);
 
 	return nRetCode;
+}
+
+ int AesManager::TransferCall(std::string callingDn, int oldCallID, int newCallId){
+	RetCode_t nRetCode = 0;
+	InvokeID_t invokeID = 0;
+
+	DeviceID_t callingDevice;
+	strncpy(callingDevice, callingDn.c_str(), sizeof(callingDevice));
+
+	ConnectionID_t oldConnId;
+	oldConnId.callID = oldCallID;
+	memcpy(oldConnId.deviceID, callingDevice, sizeof(oldConnId.deviceID));
+
+	ConnectionID_t newConnId;
+	newConnId.callID = newCallId;
+	memcpy(newConnId.deviceID, callingDevice, sizeof(newConnId.deviceID));
+	//CSTA_TRANSFER_CALL_CONF
+
+/* cstaTransferCall() - Service Request  */
+// RetCode_t cstaTransferCall(
+// ACSHandle_t acsHandle,
+// InvokeID_t invokeID,
+// ConnectionID_t *heldCall, /* devIDType =
+// STATIC_ID */
+// ConnectionID_t *activeCall, /* devIDType =
+// STATIC_ID */
+// PrivateData_t *privateData);
+
+// typedef struct Connection_t {
+// ConnectionID_t party;
+// SubjectDeviceID_t staticDevice;
+// } Connection_t;
+
+
+	nRetCode = cstaTransferCall(acs_handle_, invokeID, &oldConnId, &newConnId, NULL);
+
+	std::cout << "oldConnId :  " << oldConnId.callID << ",  newConnId : " << newConnId.callID << std::endl;
+	
+	return nRetCode;
+ }
+
+
+ bool AesManager::CallReponseCallback(const CSTAEvent_t* csta_event) noexcept {
+	std::lock_guard lock(response_callback_queue_mutex_);	
+	auto iter = response_callback_queue_.find(csta_event->event.cstaConfirmation.invokeID);
+	if (iter != response_callback_queue_.end()) {
+		iter->second(csta_event);
+		response_callback_queue_.erase(iter);
+		return true;
+	}	
+	return false;
 }
